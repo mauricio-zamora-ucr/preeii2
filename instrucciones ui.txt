@@ -1,0 +1,31 @@
+ayudame a diseñar una UI en TKInter para python, que contena lo siguiente:
+Una ventana principal que contenga:
+Un título con el texto "DESCARGADOR DE PREMATRICULAS"
+un pie de ventana que diga "Todos los derechos reservados por Mauricio Zamora" y un número de versión, y año.
+Tres botones, donde cada botón abrirá otra ventana de tipo modal (se recomienda que mientras la ventana hija este abierta, no se pueda acceder a la ventana padre).
+El primer botón debe indicar la opción de "Descargar expedientes"
+Esta opción abrirá  una ventana que contine un formulario con las siguientes opciones:
+Título "Descargar expedientes"
+Un formulario que tenga un campo de texto donde se vea la ubicación a descargar, un botón tipo "browse" para seleccionar una ubicación, un botón que tenga la etiqueta "Escritorio" y otro "Mis documentos". Estos dos botones cuando se presionen deben colocar el campo de ubicación, el valor correspondiente para la ubicación del escritorio o mis documentos. Debe funcionar para Windows, Linux y Mac.
+Un formulario con un dos campos, uno para digitar el usuario, se debe indicar la instrucción al usuario que diga "digite su correo UCR sin el @ucr.ac.cr". El segundo campo es un cuadro de texto para digital la contraseña (no se debe ver). Luego un botón que diga "Procesar descarga".
+Debajo del formulario de autenticación debe tener un grid con las columnas "Carné", "Nombre completo", "Tiempo estimado".
+Debajo del grid, tiene que haber dos totales, uno para el total de expedientes descargados y el total de tiempo estimado.
+Y un botón para salir de la ventana y regresar a la ventana padre.
+Se debe programar además los metodos que faciliten la manipulación del grid.
+Un método para limpiar el grid.
+Un método para cargar el grid que recibe una lista de diccionarios para los tres valores.
+
+El segundo botón debe indicar la opción "Generar expediente de datos en la RAM"
+Esta opción abrirá  una ventana que contine un formulario con las siguientes opciones:
+Título "Procesa expediente copiado en memoria"
+Debe tener dos botones, el primero es "Procesar" la idea que cada vez que se presione procese un expediente, un boton para salir y regresar a la ventana padre.
+Sería conveniente que esta ventana muestre en un cuadro el resultado del procesamiento.
+Se debe programar un metodo para limpiar el resultado del procesamiento.
+
+El tercer botón debe indicar la opción de "Ver información"
+Que tenga un título que indique "Información"
+y el siguiente texto.
+ESTA ES UNA VERSIÓN DE PRUEBA EN CADA PREMATRICULA ALGO SE AGREGA O ACTUALIZA UNA FUNCIONALIDAD
+ESTE SOFTWARE ES DE TIPO "AS IS" https://en.wikipedia.org/wiki/As_is
+Este script fue hecho en mi tiempo libre, si quieren invitar a un combo de BK por semestre que lo usen se les agradece.
+Por Mauricio Zamora
