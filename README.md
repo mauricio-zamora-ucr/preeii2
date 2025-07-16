@@ -24,29 +24,107 @@ digite la credenciales y descarga todos los expedientes asigandos al docente.
 Esta versión está diseñada en "consola". Esta aplicación guarda la información
 en archivos de texto y archivos de Excel.
 
-Por lo que se considerá después de compartir este software que se todavía se
-pueden hacer mejoras significativas. Entre las cuales, se irán implementando
-de forma paulatina. Acá se hace un resumen de las nuevas características a
-implementar:
+## Arquitectura del Software
 
-1. UI, se está diseñando una interfaz gráfica, donde cada usuario pueda interactuar
-   con la aplicación a través del ratón.
-2. Incorporación de una base de datos, para almacenar los datos. Este tiene como
-   fin poder comparar si hay cambios en cada "descarga" de los datos. Para indicar
-   al usuario que elementos debería de revisar.
-3. Revisión en pantalla, sin necesidad de generar archivos de Excel.
-4. Generación opcional y bajo demanda de los informes en Excel.
-5. Generación de gráficos para facilitar la revisión y poder comparar entre estudiantes
-   cogeneracionales.
-6. Control del versionamiento a través de llaves de activación. Esto facilita que todos
-   quienes usen este software tengan las últimas versiones y evitar que se ejecuten
-   versiones antiguas.
-7. Distribución del software a través del Python Package Index (PyPI), conocido como "pip",
-   dado que muchos de los potenciales usuarios no poseen conocimiento sobre programación
-   en Python. La anterior forma de "compartir la aplicación" requería ejecutar muchas
-   tareas técnicas.
+Esta versión (2.0) ha sido completamente refactorizada siguiendo las mejores prácticas de programación en Python:
+
+### Estructura de Capas
+
+```
+src/
+├── domain/                 # Capa de dominio
+│   └── entities/          # Entidades de negocio
+├── application/           # Capa de aplicación  
+│   └── services/         # Servicios de aplicación
+├── infrastructure/       # Capa de infraestructura
+│   ├── adapters/         # Adaptadores externos
+│   └── repositories/     # Repositorios de datos
+├── presentation/         # Capa de presentación
+│   └── console/          # Interfaz de consola
+└── shared/               # Componentes compartidos
+    └── config/          # Configuración
+```
+
+### Principios Aplicados
+
+- **Arquitectura Hexagonal**: Separación clara entre lógica de negocio e infraestructura
+- **SOLID**: Principios de diseño orientado a objetos
+- **Type Hints**: Tipado estático para mejor documentación y detección de errores
+- **Dataclasses**: Uso de dataclasses para entidades inmutables
+- **Separation of Concerns**: Cada módulo tiene una responsabilidad específica
 
 ## Características técnicas de la aplicación
+
+Este software está desarrollado con:
+
+1. Python 3.8+ con type hints
+2. Arquitectura de capas (Hexagonal Architecture)
+3. Principios SOLID y Clean Code
+4. xlsxwriter para generación de archivos Excel
+5. requests para web scraping
+6. termcolor para interfaz de consola colorida
+
+## Instalación
+
+### Requisitos previos
+- Python 3.8 o superior
+- pip (gestor de paquetes de Python)
+
+### Instalación desde el código fuente
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/mauricio-zamora-ucr/preeii2.git
+cd preeii2
+
+# Crear un entorno virtual (recomendado)
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Ejecutar la aplicación
+python main.py
+```
+
+### Instalación como paquete
+
+```bash
+# Instalar desde el directorio local
+pip install .
+
+# O instalar en modo desarrollo
+pip install -e .
+
+# Ejecutar
+preeii
+```
+
+## Uso
+
+La aplicación se ejecuta desde la línea de comandos y presenta un menú interactivo con las siguientes opciones:
+
+1. **Descargar expedientes**: Se conecta al sistema de matrícula de la UCR y descarga automáticamente todos los expedientes asignados
+2. **Información**: Muestra información sobre la aplicación
+3. **Procesar expediente en memoria RAM**: Procesa contenido copiado al clipboard desde el navegador
+4. **Salir**: Termina la aplicación
+
+### Archivos generados
+
+- `expediente/`: Contiene los datos descargados de cada estudiante
+- `solicitudes/`: Contiene las solicitudes de prematrícula procesadas
+- `salida/`: Contiene los archivos Excel generados con el análisis
+
+## Funcionalidades
+
+- ✅ Descarga automática de expedientes
+- ✅ Procesamiento de prematrículas desde clipboard
+- ✅ Generación de archivos Excel con formato
+- ✅ Validación de requisitos y correquisitos
+- ✅ Interfaz de consola colorida
+- ✅ Arquitectura modular y extensible
+- ✅ Type hints para mejor mantenibilidad
 
 Este software está desarrollado con:
 

@@ -1,0 +1,17 @@
+# Dependencias del proyecto PreEII
+# 
+# Web scraping y HTTP
+requests>=2.28.0
+urllib3>=1.26.0
+
+# Manipulación de archivos Excel
+xlsxwriter>=3.0.0
+
+# Interfaz de consola y colores
+termcolor>=2.0.0
+
+# Manipulación del clipboard
+pyperclip>=1.8.0
+
+# Typing para Python < 3.9 (si es necesario)
+typing-extensions>=4.0.0
