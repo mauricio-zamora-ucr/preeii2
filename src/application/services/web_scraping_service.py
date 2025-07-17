@@ -109,8 +109,12 @@ class WebScrapingService:
 
             # Procesar cada estudiante
             for estudiante in estudiantes:
-                clave_estudiante, carne, nombre, correo = estudiante
-                self._procesar_estudiante_individual(clave_estudiante, carne, nombre)
+                if len(estudiante) >= 3:
+                    # Pasar toda la lista al método para manejo flexible
+                    self._procesar_estudiante_individual(estudiante)
+                else:
+                    print(f"Estudiante con datos incompletos: {estudiante}")
+                    continue
 
             return True
 
@@ -118,23 +122,33 @@ class WebScrapingService:
             cprint(f'Error durante el proceso de descarga: {str(e)}', 'white', 'on_red', attrs=['bold'])
             return False
 
-    def _procesar_estudiante_individual(self, clave: str, carne: str, nombre: str) -> None:
+    def _procesar_estudiante_individual(self, estudiante_data: List[str]) -> None:
         """
         Procesa un estudiante individual descargando y guardando su expediente.
         
         Args:
-            clave: Clave del estudiante en el sistema
-            carne: Carné del estudiante
-            nombre: Nombre del estudiante
+            estudiante_data: Lista con datos del estudiante [clave, carne, nombre, ...]
         """
+        # Extraer datos del estudiante - manejo flexible de la lista
+        if len(estudiante_data) < 3:
+            print(f"Datos de estudiante incompletos: {estudiante_data}")
+            return
+            
+        clave = estudiante_data[0]
+        carne = estudiante_data[1]
+        nombre = estudiante_data[2]
+        # El correo puede estar en diferentes posiciones o no existir
+        correo = estudiante_data[-1] if len(estudiante_data) > 3 else ""
+        
+        print(f"Procesando estudiante: {carne} - {nombre}")
+        
         # Descargar expediente
         contenido_expediente = self.descargar_expediente_estudiante(clave)
         
         # Procesar contenido
         datos_cursos = self.procesar_expediente_estudiante(contenido_expediente)
         
-        # Aquí se conectaría con el repositorio para guardar los datos
-        # Por ahora mantenemos la funcionalidad original
+        # Guardar datos usando el repositorio
         from ...infrastructure.repositories.file_repository import FileRepository
         
         file_repo = FileRepository()

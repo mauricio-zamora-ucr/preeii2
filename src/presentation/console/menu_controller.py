@@ -40,7 +40,7 @@ class MenuController:
             self._mostrar_informacion_expiracion(dias_restantes)
             
             opcion = ConsoleUtils.leer_rango_numeros_enteros(
-                'Digite la opción del menú:', 0, 3
+                'Digite la opción del menú:', 0, 4
             )
             
             if opcion == 0:
@@ -52,6 +52,8 @@ class MenuController:
                 self._opcion_mostrar_informacion()
             elif opcion == 3:
                 self._opcion_procesar_memoria()
+            elif opcion == 4:
+                self._opcion_regenerar_excel()
 
     def _mostrar_encabezado_menu(self) -> None:
         """Muestra el encabezado del menú principal."""
@@ -64,6 +66,7 @@ class MenuController:
             (1, 'DESCARGAR EXPEDIENTES'),
             (2, 'INFORMACIÓN'),
             (3, 'PROCESAR EXPEDIENTE EN MEMORIA RAM'),
+            (4, 'REGENERAR ARCHIVOS EXCEL'),
             (0, 'SALIR')
         ]
         
@@ -244,3 +247,73 @@ class MenuController:
         
         excel_writer = ExcelWriter()
         excel_writer.generar_expediente(expediente, str(ruta_salida))
+
+    def _opcion_regenerar_excel(self) -> None:
+        """Regenera archivos Excel desde expedientes existentes."""
+        from ...infrastructure.repositories.file_repository import FileRepository
+        
+        print("REGENERACIÓN DE ARCHIVOS EXCEL")
+        print("=" * self.ancho_menu)
+        print("Esta opción regenera los archivos Excel desde los expedientes")
+        print("que ya fueron descargados anteriormente.")
+        print()
+        
+        file_repo = FileRepository()
+        archivos_expedientes = file_repo.listar_archivos_expedientes()
+        
+        if not archivos_expedientes:
+            cprint("No se encontraron expedientes para procesar.", 'white', 'on_red', attrs=['bold'])
+            print("Primero debe descargar expedientes usando la opción 1.")
+            ConsoleUtils.pausar()
+            return
+
+        print(f"Se encontraron {len(archivos_expedientes)} expedientes para procesar.")
+        
+        respuesta = ConsoleUtils.leer_texto("¿Desea continuar? (s/n): ").lower()
+        if respuesta not in ['s', 'si', 'sí', 'y', 'yes']:
+            return
+        
+        print()
+        print("Procesando expedientes...")
+        print("=" * self.ancho_menu)
+        
+        exitosos = 0
+        errores = 0
+        
+        for i, archivo in enumerate(archivos_expedientes, 1):
+            try:
+                # Leer información del estudiante
+                carne = archivo.replace('.edf', '')
+                carne_info, nombre = file_repo.leer_informacion_estudiante(carne)
+                
+                # Leer historial
+                historial = file_repo.leer_historial(carne)
+                
+                # Procesar expediente
+                expediente = self.expediente_service.procesar_expediente_estudiante(
+                    carne, nombre, historial
+                )
+                
+                # Generar archivo Excel
+                self._generar_archivo_excel(expediente, file_repo)
+                
+                # Mostrar progreso
+                print(f"[{i:3d}/{len(archivos_expedientes)}] ✓ {carne} - {nombre[:30]}")
+                exitosos += 1
+                
+            except Exception as e:
+                print(f"[{i:3d}/{len(archivos_expedientes)}] ✗ Error en {archivo}: {str(e)}")
+                errores += 1
+        
+        print()
+        print("=" * self.ancho_menu)
+        cprint(f"Proceso completado: {exitosos} exitosos, {errores} errores", 'green', attrs=['bold'])
+        
+        if exitosos > 0:
+            print("Los archivos Excel se han generado en la carpeta 'salida/'")
+            print("Cada archivo contiene 3 hojas:")
+            print("  • Malla Curricular: Vista de mapa por semestres")
+            print("  • Expediente Detallado: Vista tabular por semestres")
+            print("  • Historial Completo: Todos los registros académicos")
+        
+        ConsoleUtils.pausar()
