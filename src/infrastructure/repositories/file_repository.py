@@ -51,7 +51,7 @@ class FileRepository:
         
         archivo_path = self.directorio_expedientes / f'{archivo}.sdf'
         
-        with open(archivo_path, 'w', newline='', encoding='utf-8') as file:
+        with open(archivo_path, 'w', newline='', encoding='latin-1') as file:
             writer = csv.DictWriter(file, fieldnames=encabezado, delimiter='\t', dialect='excel')
             writer.writeheader()
             for registro in historial:
@@ -76,10 +76,25 @@ class FileRepository:
             raise FileNotFoundError(f"No se encontró el archivo de historial: {archivo_path}")
         
         historial = []
-        with open(archivo_path, 'r', newline='', encoding='utf-8') as file:
-            reader = csv.DictReader(file, delimiter='\t', dialect='excel')
-            for linea in reader:
-                historial.append(dict(linea))
+        
+        # Intentar múltiples codificaciones
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        
+        for encoding in encodings:
+            try:
+                with open(archivo_path, 'r', newline='', encoding=encoding) as file:
+                    reader = csv.DictReader(file, delimiter='\t', dialect='excel')
+                    for linea in reader:
+                        historial.append(dict(linea))
+                break  # Si llega aquí, la codificación funcionó
+            except UnicodeDecodeError:
+                if encoding == encodings[-1]:  # Si es la última codificación
+                    # Si todas las codificaciones fallan, usar 'latin-1' con manejo de errores
+                    with open(archivo_path, 'r', newline='', encoding='latin-1', errors='replace') as file:
+                        reader = csv.DictReader(file, delimiter='\t', dialect='excel')
+                        for linea in reader:
+                            historial.append(dict(linea))
+                continue
         
         return historial
 
@@ -96,7 +111,7 @@ class FileRepository:
         
         archivo_path = self.directorio_expedientes / f'{archivo}.edf'
         
-        with open(archivo_path, 'w', encoding='utf-8') as file:
+        with open(archivo_path, 'w', encoding='latin-1') as file:
             file.write(f'{carne}\n')
             file.write(nombre)
 
@@ -118,12 +133,25 @@ class FileRepository:
         if not archivo_path.exists():
             raise FileNotFoundError(f"No se encontró el archivo de información: {archivo_path}")
         
-        with open(archivo_path, 'r', encoding='utf-8') as file:
-            lineas = file.readlines()
-            carne = lineas[0].strip() if len(lineas) > 0 else ''
-            nombre = lineas[1].strip() if len(lineas) > 1 else ''
+        # Intentar múltiples codificaciones
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
         
-        return carne, nombre
+        for encoding in encodings:
+            try:
+                with open(archivo_path, 'r', encoding=encoding) as file:
+                    lineas = file.readlines()
+                    carne = lineas[0].strip() if len(lineas) > 0 else ''
+                    nombre = lineas[1].strip() if len(lineas) > 1 else ''
+                return carne, nombre
+            except UnicodeDecodeError:
+                if encoding == encodings[-1]:  # Si es la última codificación
+                    # Si todas las codificaciones fallan, usar 'latin-1' con manejo de errores
+                    with open(archivo_path, 'r', encoding='latin-1', errors='replace') as file:
+                        lineas = file.readlines()
+                        carne = lineas[0].strip() if len(lineas) > 0 else ''
+                        nombre = lineas[1].strip() if len(lineas) > 1 else ''
+                    return carne, nombre
+                continue
 
     def escribir_cursos_solicitados(
         self, 
@@ -143,7 +171,7 @@ class FileRepository:
         
         archivo_path = self.directorio_solicitudes / f'{archivo}.sdf'
         
-        with open(archivo_path, 'w', newline='', encoding='utf-8') as file:
+        with open(archivo_path, 'w', newline='', encoding='latin-1') as file:
             writer = csv.DictWriter(file, fieldnames=encabezado, delimiter='\t', dialect='excel')
             writer.writeheader()
             for curso in cursos_solicitados:
@@ -162,7 +190,7 @@ class FileRepository:
         
         archivo_path = self.directorio_solicitudes / f'{archivo}.edf'
         
-        with open(archivo_path, 'w', encoding='utf-8') as file:
+        with open(archivo_path, 'w', encoding='latin-1') as file:
             file.write(f'estudiante:{estudiante}\n')
             file.write(f'rev:{revision}')
 

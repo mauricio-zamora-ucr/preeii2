@@ -163,3 +163,32 @@ gitGraph
 - [ ] Multicarrera
 - [ ] Reportes en excel
 - [ ] Multiusuario
+
+## Resolución de Problemas de Codificación
+
+### Problema
+Los archivos de expedientes (.edf) pueden estar guardados en diferentes codificaciones según el sistema operativo:
+- Windows: `cp1252` o `latin-1`
+- macOS/Linux: `utf-8`
+- Sistemas antiguos: `iso-8859-1`
+
+### Solución Implementada
+El sistema ahora maneja automáticamente múltiples codificaciones:
+
+1. **Lectura Inteligente**: Intenta leer archivos con las codificaciones más comunes:
+   - `utf-8` (predeterminada)
+   - `latin-1` (Windows)
+   - `cp1252` (Windows extendida)
+   - `iso-8859-1` (ISO estándar)
+
+2. **Escritura Compatible**: Los nuevos archivos se guardan en `latin-1` para máxima compatibilidad
+
+3. **Manejo de Errores**: Si todas las codificaciones fallan, usa `latin-1` con reemplazo de caracteres
+
+### Uso
+El sistema funciona automáticamente sin configuración adicional. Si ve errores como:
+```
+'utf-8' codec can't decode byte 0xd1 in position 32: invalid continuation byte
+```
+
+Estos ya están resueltos en la versión actual.
