@@ -24,6 +24,41 @@ digite la credenciales y descarga todos los expedientes asigandos al docente.
 Esta versión está diseñada en "consola". Esta aplicación guarda la información
 en archivos de texto y archivos de Excel.
 
+## Funcionalidades de los Archivos Excel
+
+Cada archivo Excel generado contiene **7 hojas especializadas** para facilitar el análisis académico:
+
+### 📊 **Hojas de Visualización**
+1. **"Malla Curricular"** - Formato visual de mapa organizado por semestres del plan
+2. **"Expediente Detallado"** - Vista tabular organizada por semestres del plan  
+3. **"Historial Completo"** - Todos los registros académicos cronológicos
+
+### 📈 **Hojas de Análisis** (NUEVAS)
+4. **"Análisis por Semestres"** - Rendimiento cronológico con estadísticas por período:
+   - Total de cursos y créditos matriculados, aprobados, reprobados
+   - Gráficos de línea para visualizar evolución del rendimiento
+   - Porcentaje de rendimiento por período
+
+5. **"Progreso del Plan"** - Estado de avance por semestre del plan de estudios:
+   - Cursos aprobados, reprobados, en matrícula y pendientes por semestre
+   - Porcentaje de progreso y estado general de cada semestre
+
+6. **"Cursos Pendientes"** - Análisis de requisitos para facilitar matrícula:
+   - Cursos pendientes con sus requisitos y correquisitos
+   - Verificación automática si cumple los requisitos (✓ o ⏳)
+   - Indicador si puede matricular cada curso
+
+7. **"Cursos Reprobados"** - Historial detallado de cursos con problemas:
+   - Todos los intentos de cursos reprobados o con retiros
+   - Cronología de intentos con fechas y grupos
+   - Alertas para cursos con 3+ intentos
+
+### 🎯 **Beneficios para el Profesor**
+- **Análisis rápido**: Identificar estudiantes con problemas académicos
+- **Guía de matrícula**: Ver qué cursos puede matricular cada estudiante
+- **Detección temprana**: Cursos con múltiples reprobaciones
+- **Visualización**: Gráficos de evolución del rendimiento
+
 ## Arquitectura del Software
 
 Esta versión (2.0) ha sido completamente refactorizada siguiendo las mejores prácticas de programación en Python:

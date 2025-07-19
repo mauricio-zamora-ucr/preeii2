@@ -311,9 +311,13 @@ class MenuController:
         
         if exitosos > 0:
             print("Los archivos Excel se han generado en la carpeta 'salida/'")
-            print("Cada archivo contiene 3 hojas:")
+            print("Cada archivo contiene 7 hojas especializadas:")
             print("  • Malla Curricular: Vista de mapa por semestres")
             print("  • Expediente Detallado: Vista tabular por semestres")
             print("  • Historial Completo: Todos los registros académicos")
+            print("  • Análisis por Semestres: Rendimiento cronológico con gráficos")
+            print("  • Progreso del Plan: Estado por semestre del plan")
+            print("  • Cursos Pendientes: Análisis de requisitos para matrícula")
+            print("  • Cursos Reprobados: Historial de intentos fallidos")
         
         ConsoleUtils.pausar()
