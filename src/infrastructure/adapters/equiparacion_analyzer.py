@@ -166,9 +166,9 @@ class EquiparacionAnalyzer:
         todos_los_cursos = {}
         
         try:
-            # Buscar hoja de historial académico
+            # Buscar hoja de expediente detallado primero
             sheet = None
-            for nombre_hoja in ['Historial Académico', 'Historial', 'Historial Academico']:
+            for nombre_hoja in ['Expediente Detallado', 'Historial Académico', 'Historial', 'Historial Academico']:
                 if nombre_hoja in workbook.sheetnames:
                     sheet = workbook[nombre_hoja]
                     break
@@ -176,44 +176,44 @@ class EquiparacionAnalyzer:
             if not sheet:
                 return todos_los_cursos
             
-            # Buscar encabezados
+            # Buscar encabezados en el expediente detallado
             headers = {}
-            for row in sheet.iter_rows(min_row=1, max_row=10, values_only=True):
+            for row_idx, row in enumerate(sheet.iter_rows(min_row=1, max_row=10, values_only=True), 1):
                 for col_idx, cell_value in enumerate(row, 1):
                     if cell_value:
                         cell_str = str(cell_value).lower()
-                        if 'código' in cell_str or 'codigo' in cell_str:
-                            headers['codigo'] = col_idx
-                        elif 'nombre' in cell_str:
+                        if 'sigla' in cell_str:
+                            headers['sigla'] = col_idx
+                        elif 'curso' in cell_str and 'nombre' not in headers:
                             headers['nombre'] = col_idx
+                        elif 'estado' in cell_str:
+                            headers['estado'] = col_idx
                         elif 'nota' in cell_str:
                             headers['nota'] = col_idx
-                        elif 'resultado' in cell_str:
-                            headers['resultado'] = col_idx
                         elif 'créditos' in cell_str or 'creditos' in cell_str:
                             headers['creditos'] = col_idx
-                if headers:
+                if len(headers) >= 3:  # Al menos sigla, nombre y estado
                     break
             
-            if not headers.get('codigo'):
+            if not headers.get('sigla') or not headers.get('estado'):
                 return todos_los_cursos
             
-            # Leer datos de cursos
-            start_row = 2  # Comenzar después de encabezados
+            # Leer datos de cursos del expediente detallado
+            start_row = 8  # Comenzar después de la información del estudiante
             for row in sheet.iter_rows(min_row=start_row, values_only=True):
-                if not row or not row[headers['codigo'] - 1]:
+                if not row or not row[headers['sigla'] - 1]:
                     continue
                 
-                codigo = str(row[headers['codigo'] - 1]).strip()
-                if not codigo or codigo.upper() == 'CÓDIGO':
+                sigla = str(row[headers['sigla'] - 1]).strip()
+                if not sigla or sigla.upper() in ['SIGLA', 'SEMESTRE']:
                     continue
                 
                 # Extraer información del curso
                 info_curso = {
-                    'codigo': codigo,
+                    'sigla': sigla,
                     'nombre': str(row[headers.get('nombre', 1) - 1] or '').strip(),
+                    'estado': str(row[headers.get('estado', 1) - 1] or '').strip(),
                     'nota': 0.0,
-                    'resultado': '',
                     'creditos': 0,
                     'aprobado': False
                 }
@@ -222,16 +222,10 @@ class EquiparacionAnalyzer:
                 if 'nota' in headers and headers['nota'] <= len(row):
                     try:
                         nota_val = row[headers['nota'] - 1]
-                        if nota_val is not None:
+                        if nota_val is not None and str(nota_val).strip():
                             info_curso['nota'] = float(nota_val)
                     except (ValueError, TypeError):
                         pass
-                
-                # Procesar resultado
-                if 'resultado' in headers and headers['resultado'] <= len(row):
-                    resultado = row[headers['resultado'] - 1]
-                    if resultado:
-                        info_curso['resultado'] = str(resultado).strip()
                 
                 # Procesar créditos
                 if 'creditos' in headers and headers['creditos'] <= len(row):
@@ -242,13 +236,13 @@ class EquiparacionAnalyzer:
                     except (ValueError, TypeError):
                         pass
                 
-                # Determinar si está aprobado
-                if (info_curso['nota'] >= 7.0 or 
-                    info_curso['resultado'].upper() in ['APR', 'APROBADO', 'A']):
+                # Determinar si está aprobado basado en el estado
+                estado_upper = info_curso['estado'].upper()
+                if estado_upper in ['APROBADO', 'EQUIVALENTE', 'CONVALIDADO']:
                     info_curso['aprobado'] = True
                 
-                # Incluir TODOS los cursos (no solo aprobados)
-                todos_los_cursos[codigo] = info_curso
+                # Guardar curso
+                todos_los_cursos[sigla] = info_curso
             
         except Exception as e:
             print(f"Error extrayendo cursos: {str(e)}")
@@ -358,34 +352,41 @@ class EquiparacionAnalyzer:
             cell.alignment = center_alignment
         row += 1
         
-        # Procesar cada curso de la tabla de equivalencias
-        for equivalencia in self.tabla_equivalencias:
-            sigla_vieja, curso_viejo, creditos_viejo, sigla_nueva, curso_nuevo, creditos_nuevo = equivalencia
+        # Procesar cursos del expediente detallado como base
+        cursos_procesados = []
+        
+        # Para cada curso del expediente detallado
+        for sigla_vieja, curso_info in todos_los_cursos.items():
+            # Buscar equivalencia en la tabla
+            equivalencia_encontrada = None
+            for equivalencia in self.tabla_equivalencias:
+                if equivalencia[0] == sigla_vieja:  # sigla_vieja coincide
+                    equivalencia_encontrada = equivalencia
+                    break
             
-            # Determinar estado del curso en plan vigente
-            estado_viejo = ''
+            if equivalencia_encontrada:
+                sigla_vieja, curso_viejo, creditos_viejo, sigla_nueva, curso_nuevo, creditos_nuevo = equivalencia_encontrada
+            else:
+                # Curso no tiene equivalencia conocida
+                sigla_vieja = curso_info['sigla']
+                curso_viejo = curso_info['nombre']
+                creditos_viejo = curso_info['creditos']
+                sigla_nueva = ''
+                curso_nuevo = ''
+                creditos_nuevo = 0
+            
+            # Estado en plan vigente (exactamente como está en el expediente)
+            estado_viejo = curso_info['estado']
             fill_viejo = None
             
-            if sigla_vieja in todos_los_cursos:
-                curso_info = todos_los_cursos[sigla_vieja]
-                if curso_info['aprobado']:
-                    estado_viejo = 'APROBADO'
-                    fill_viejo = approved_fill
-                else:
-                    # Mostrar nota o resultado si existe pero no está aprobado
-                    if curso_info['nota'] > 0:
-                        estado_viejo = f"Nota: {curso_info['nota']:.1f}"
-                        fill_viejo = pending_fill
-                    elif curso_info['resultado']:
-                        estado_viejo = curso_info['resultado']
-                        fill_viejo = pending_fill
-                    else:
-                        estado_viejo = 'CURSADO'
-                        fill_viejo = pending_fill
-            else:
-                estado_viejo = ''  # No cursado
+            if estado_viejo.upper() in ['APROBADO', 'EQUIVALENTE', 'CONVALIDADO']:
+                fill_viejo = approved_fill
+            elif estado_viejo.upper() == 'REPROBADO':
+                fill_viejo = pending_fill
+            elif estado_viejo.upper() == 'MATRICULADO':
+                fill_viejo = no_equiv_fill
             
-            # Determinar estado del curso en plan nuevo
+            # Estado en plan nuevo (aplicar lógica de equiparación)
             estado_nuevo = ''
             fill_nuevo = None
             
@@ -393,9 +394,9 @@ class EquiparacionAnalyzer:
                 estado_nuevo = 'Sin equivalencia'
                 fill_nuevo = no_equiv_fill
             elif sigla_vieja == sigla_nueva:  # Mismo curso en ambos planes
-                estado_nuevo = estado_viejo  # Mismo estado
+                estado_nuevo = estado_viejo  # Copiar exactamente el mismo estado
                 fill_nuevo = fill_viejo
-            elif sigla_vieja in todos_los_cursos and todos_los_cursos[sigla_vieja]['aprobado']:
+            elif estado_viejo.upper() in ['APROBADO', 'EQUIVALENTE', 'CONVALIDADO']:
                 # Curso diferente pero aprobado en plan vigente
                 
                 # Casos especiales de química
@@ -430,31 +431,67 @@ class EquiparacionAnalyzer:
                 else:
                     estado_nuevo = 'EQUIPARADO'
                     fill_nuevo = equiv_fill
-            elif sigla_nueva:  # Tiene equivalencia pero no está aprobado el curso viejo
+            else:  # No aprobado en plan vigente
                 estado_nuevo = 'Pendiente'
                 fill_nuevo = pending_fill
             
+            cursos_procesados.append({
+                'sigla_vieja': sigla_vieja,
+                'curso_viejo': curso_viejo,
+                'creditos_viejo': creditos_viejo,
+                'estado_viejo': estado_viejo,
+                'fill_viejo': fill_viejo,
+                'sigla_nueva': sigla_nueva,
+                'curso_nuevo': curso_nuevo,
+                'creditos_nuevo': creditos_nuevo,
+                'estado_nuevo': estado_nuevo,
+                'fill_nuevo': fill_nuevo
+            })
+        
+        # Agregar cursos completamente nuevos del plan nuevo (que no están en el plan vigente)
+        siglas_procesadas = set(curso['sigla_nueva'] for curso in cursos_procesados if curso['sigla_nueva'])
+        
+        for equivalencia in self.tabla_equivalencias:
+            sigla_vieja, curso_viejo, creditos_viejo, sigla_nueva, curso_nuevo, creditos_nuevo = equivalencia
+            
+            # Si es un curso nuevo que no tiene equivalencia en el plan vigente
+            if sigla_nueva and sigla_nueva not in siglas_procesadas and not sigla_vieja:
+                cursos_procesados.append({
+                    'sigla_vieja': '',
+                    'curso_viejo': '',
+                    'creditos_viejo': 0,
+                    'estado_viejo': '',
+                    'fill_viejo': None,
+                    'sigla_nueva': sigla_nueva,
+                    'curso_nuevo': curso_nuevo,
+                    'creditos_nuevo': creditos_nuevo,
+                    'estado_nuevo': 'Pendiente',
+                    'fill_nuevo': pending_fill
+                })
+        
+        # Escribir todos los cursos
+        for curso in cursos_procesados:
             # Escribir datos del plan vigente
-            sheet.cell(row=row, column=1).value = sigla_vieja
-            sheet.cell(row=row, column=2).value = curso_viejo
-            sheet.cell(row=row, column=3).value = creditos_viejo
-            sheet.cell(row=row, column=4).value = estado_viejo
+            sheet.cell(row=row, column=1).value = curso['sigla_vieja']
+            sheet.cell(row=row, column=2).value = curso['curso_viejo']
+            sheet.cell(row=row, column=3).value = curso['creditos_viejo']
+            sheet.cell(row=row, column=4).value = curso['estado_viejo']
             
             # Aplicar formato al plan vigente
-            if fill_viejo:
+            if curso['fill_viejo']:
                 for col in range(1, 5):
-                    sheet.cell(row=row, column=col).fill = fill_viejo
+                    sheet.cell(row=row, column=col).fill = curso['fill_viejo']
             
             # Escribir datos del plan nuevo
-            sheet.cell(row=row, column=5).value = sigla_nueva
-            sheet.cell(row=row, column=6).value = curso_nuevo
-            sheet.cell(row=row, column=7).value = creditos_nuevo
-            sheet.cell(row=row, column=8).value = estado_nuevo
+            sheet.cell(row=row, column=5).value = curso['sigla_nueva']
+            sheet.cell(row=row, column=6).value = curso['curso_nuevo']
+            sheet.cell(row=row, column=7).value = curso['creditos_nuevo']
+            sheet.cell(row=row, column=8).value = curso['estado_nuevo']
             
             # Aplicar formato al plan nuevo
-            if fill_nuevo:
+            if curso['fill_nuevo']:
                 for col in range(5, 9):
-                    sheet.cell(row=row, column=col).fill = fill_nuevo
+                    sheet.cell(row=row, column=col).fill = curso['fill_nuevo']
             
             # Aplicar fuente normal a todas las celdas
             for col in range(1, 9):
