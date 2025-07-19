@@ -612,9 +612,9 @@ class ExcelWriter:
             
             fila += 1
         
-        # Crear gráficos si hay datos
-        if datos_graficos:
-            self._crear_graficos_rendimiento(workbook, worksheet, datos_graficos, fila + 2)
+        # Crear gráficos si hay datos - DESHABILITADO
+        # if datos_graficos:
+        #     self._crear_graficos_rendimiento(workbook, worksheet, datos_graficos, fila + 2)
         
         # Ajustar ancho de columnas
         worksheet.set_column(0, 0, 12)  # Período
@@ -622,45 +622,51 @@ class ExcelWriter:
 
     def _crear_graficos_rendimiento(self, workbook: Workbook, worksheet, datos_graficos: list, fila_inicio: int) -> None:
         """
-        Crea gráficos de línea para visualizar el rendimiento.
+        Crea un gráfico simplificado de rendimiento por período.
         
         Args:
             workbook: Libro de Excel
             worksheet: Hoja de trabajo
-            datos_graficos: Datos para los gráficos
-            fila_inicio: Fila donde insertar los gráficos
+            datos_graficos: Datos para el gráfico
+            fila_inicio: Fila donde insertar el gráfico
         """
-        # Gráfico 1: Cursos por período
-        chart_cursos = workbook.add_chart({'type': 'line'})
-        chart_cursos.add_series({
-            'name': 'Cursos Matriculados',
-            'categories': [worksheet.name, 4, 0, 3 + len(datos_graficos), 0],
-            'values': [worksheet.name, 4, 1, 3 + len(datos_graficos), 1],
-            'line': {'color': '#1f77b4', 'width': 3}
+        # Gráfico único: Rendimiento Porcentual por Período
+        chart_rendimiento = workbook.add_chart({'type': 'line'})
+        chart_rendimiento.add_series({
+            'name': 'Rendimiento Porcentual',
+            'categories': [worksheet.name, 4, 0, 3 + len(datos_graficos), 0],  # Períodos (columna A)
+            'values': [worksheet.name, 4, 11, 3 + len(datos_graficos), 11],    # Rendimiento % (columna L)
+            'line': {'color': '#2E8B57', 'width': 3},  # Verde mar
+            'marker': {'type': 'circle', 'size': 6, 'border': {'color': '#2E8B57'}, 'fill': {'color': '#2E8B57'}}
         })
         
-        chart_cursos.set_title({'name': 'Evolución de Cursos por Período'})
-        chart_cursos.set_x_axis({'name': 'Período'})
-        chart_cursos.set_y_axis({'name': 'Número de Cursos'})
-        chart_cursos.set_size({'width': 480, 'height': 300})
-        
-        worksheet.insert_chart(fila_inicio, 0, chart_cursos)
-        
-        # Gráfico 2: Créditos por período
-        chart_creditos = workbook.add_chart({'type': 'line'})
-        chart_creditos.add_series({
-            'name': 'Créditos Matriculados',
-            'categories': [worksheet.name, 4, 0, 3 + len(datos_graficos), 0],
-            'values': [worksheet.name, 4, 6, 3 + len(datos_graficos), 6],
-            'line': {'color': '#ff7f0e', 'width': 3}
+        chart_rendimiento.set_title({
+            'name': 'Evolución del Rendimiento Académico por Período',
+            'name_font': {'size': 14, 'bold': True}
+        })
+        chart_rendimiento.set_x_axis({
+            'name': 'Período (Cronológico)',
+            'name_font': {'size': 11, 'bold': True},
+            'num_font': {'rotation': -45}  # Rotar etiquetas del eje X
+        })
+        chart_rendimiento.set_y_axis({
+            'name': 'Rendimiento Porcentual (%)',
+            'name_font': {'size': 11, 'bold': True},
+            'min': 0,
+            'max': 100,
+            'major_gridlines': {'visible': True, 'line': {'color': '#D0D0D0'}}
+        })
+        chart_rendimiento.set_size({'width': 720, 'height': 400})  # Gráfico más grande
+        chart_rendimiento.set_plotarea({
+            'border': {'color': '#808080'},
+            'fill': {'color': '#FAFAFA'}
+        })
+        chart_rendimiento.set_legend({
+            'position': 'top',
+            'font': {'size': 10, 'bold': True}
         })
         
-        chart_creditos.set_title({'name': 'Evolución de Créditos por Período'})
-        chart_creditos.set_x_axis({'name': 'Período'})
-        chart_creditos.set_y_axis({'name': 'Número de Créditos'})
-        chart_creditos.set_size({'width': 480, 'height': 300})
-        
-        worksheet.insert_chart(fila_inicio, 7, chart_creditos)
+        worksheet.insert_chart(fila_inicio, 0, chart_rendimiento)
 
     def _generar_hoja_progreso_plan(self, workbook: Workbook, expediente: Expediente, formatos: Dict[str, Format]) -> None:
         """

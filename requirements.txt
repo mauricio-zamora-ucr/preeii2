@@ -6,6 +6,7 @@ urllib3>=1.26.0
 
 # Manipulación de archivos Excel
 xlsxwriter>=3.0.0
+openpyxl>=3.0.0
 
 # Interfaz de consola y colores
 termcolor>=2.0.0

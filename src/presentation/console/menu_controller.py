@@ -40,7 +40,7 @@ class MenuController:
             self._mostrar_informacion_expiracion(dias_restantes)
             
             opcion = ConsoleUtils.leer_rango_numeros_enteros(
-                'Digite la opción del menú:', 0, 4
+                'Digite la opción del menú:', 0, 5
             )
             
             if opcion == 0:
@@ -54,6 +54,8 @@ class MenuController:
                 self._opcion_procesar_memoria()
             elif opcion == 4:
                 self._opcion_regenerar_excel()
+            elif opcion == 5:
+                self._opcion_analisis_equiparacion()
 
     def _mostrar_encabezado_menu(self) -> None:
         """Muestra el encabezado del menú principal."""
@@ -67,6 +69,7 @@ class MenuController:
             (2, 'INFORMACIÓN'),
             (3, 'PROCESAR EXPEDIENTE EN MEMORIA RAM'),
             (4, 'REGENERAR ARCHIVOS EXCEL'),
+            (5, 'ANÁLISIS DE EQUIPARACIÓN'),
             (0, 'SALIR')
         ]
         
@@ -319,5 +322,85 @@ class MenuController:
             print("  • Progreso del Plan: Estado por semestre del plan")
             print("  • Cursos Pendientes: Análisis de requisitos para matrícula")
             print("  • Cursos Reprobados: Historial de intentos fallidos")
+        
+        ConsoleUtils.pausar()
+
+    def _opcion_analisis_equiparacion(self) -> None:
+        """Realiza análisis de equiparación para nuevo plan de estudios."""
+        from ...infrastructure.adapters.equiparacion_analyzer import EquiparacionAnalyzer
+        
+        print("ANÁLISIS DE EQUIPARACIÓN AL NUEVO PLAN DE ESTUDIOS")
+        print("=" * self.ancho_menu)
+        print("Esta opción analiza los expedientes existentes para determinar")
+        print("la equiparación de cursos al nuevo plan de estudios.")
+        print()
+        
+        # Verificar archivos Excel existentes
+        import os
+        from pathlib import Path
+        
+        directorio_salida = Path('./salida')
+        if not directorio_salida.exists():
+            cprint("No se encontraron archivos Excel para analizar.", 'white', 'on_red', attrs=['bold'])
+            print("Primero debe generar los expedientes usando la opción 1 o 4.")
+            ConsoleUtils.pausar()
+            return
+        
+        archivos_excel = list(directorio_salida.glob('*.xlsx'))
+        # Filtrar archivos de prueba
+        archivos_excel = [f for f in archivos_excel if not f.name.startswith('TEST-')]
+        
+        if not archivos_excel:
+            cprint("No se encontraron archivos Excel válidos para analizar.", 'white', 'on_red', attrs=['bold'])
+            print("Primero debe generar los expedientes usando la opción 1 o 4.")
+            ConsoleUtils.pausar()
+            return
+        
+        print(f"Se encontraron {len(archivos_excel)} expedientes para analizar.")
+        
+        respuesta = ConsoleUtils.leer_texto("¿Desea continuar con el análisis? (s/n): ").lower()
+        if respuesta not in ['s', 'si', 'sí', 'y', 'yes']:
+            return
+        
+        print()
+        print("Analizando expedientes para equiparación...")
+        print("=" * self.ancho_menu)
+        
+        analyzer = EquiparacionAnalyzer()
+        exitosos = 0
+        errores = 0
+        
+        for i, archivo_excel in enumerate(archivos_excel, 1):
+            try:
+                # Procesar archivo para equiparación
+                resultado = analyzer.analizar_expediente(str(archivo_excel))
+                
+                if resultado:
+                    # Extraer nombre del estudiante del archivo
+                    nombre_archivo = archivo_excel.stem
+                    partes = nombre_archivo.split('-', 1)
+                    carne = partes[0] if len(partes) > 0 else "N/A"
+                    nombre = partes[1] if len(partes) > 1 else "N/A"
+                    
+                    print(f"[{i:3d}/{len(archivos_excel)}] ✓ {carne} - {nombre[:30]}")
+                    exitosos += 1
+                else:
+                    print(f"[{i:3d}/{len(archivos_excel)}] ⚠️ {archivo_excel.name} - Sin análisis")
+                    
+            except Exception as e:
+                print(f"[{i:3d}/{len(archivos_excel)}] ✗ Error en {archivo_excel.name}: {str(e)}")
+                errores += 1
+        
+        print()
+        print("=" * self.ancho_menu)
+        cprint(f"Análisis completado: {exitosos} exitosos, {errores} errores", 'green', attrs=['bold'])
+        
+        if exitosos > 0:
+            print("Se ha agregado la hoja 'Equiparación' a los archivos Excel.")
+            print("Esta hoja contiene:")
+            print("  • Análisis de cursos para el nuevo plan")
+            print("  • Convalidaciones de química general e intensiva")
+            print("  • Verificación de curso de precálculo")
+            print("  • Recomendaciones de equiparación")
         
         ConsoleUtils.pausar()
