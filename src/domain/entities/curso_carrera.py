@@ -105,32 +105,87 @@ class CursoCarrera(Curso):
         self.historial.sort(key=lambda h: (h.anno, h.periodo), reverse=True)
 
     def get_nota_actual(self) -> str:
-        """Obtiene la nota del registro más reciente del historial."""
-        if self.historial:
-            return self.historial[0].nota or ''
-        return ''
+        """
+        Obtiene la nota correspondiente al estado actual del curso.
+        
+        Si el curso está aprobado, retorna la nota del registro aprobado.
+        Si no está aprobado, retorna la nota del registro más reciente.
+        """
+        if not self.historial:
+            return ''
+        
+        # Si está aprobado, buscar la nota del registro aprobado
+        estado_actual = self.get_estado_actual()
+        if EstadoCurso.es_aprobado(estado_actual):
+            for historial in self.historial:
+                if historial.estado == estado_actual:
+                    return historial.nota or ''
+        
+        # Si no está aprobado, retornar la nota más reciente
+        return self.historial[0].nota or ''
 
     def get_estado_actual(self) -> str:
-        """Obtiene el estado del registro más reciente del historial."""
-        if self.historial:
-            return self.historial[0].estado
-        return ''
+        """
+        Obtiene el estado actual del curso con prioridad para estados aprobados.
+        
+        Si el curso tiene un estado aprobado en cualquier momento del historial,
+        ese será el estado actual, independientemente de registros posteriores.
+        Si no hay estados aprobados, retorna el estado del registro más reciente.
+        """
+        if not self.historial:
+            return ''
+        
+        # Buscar primero cualquier estado aprobado en el historial
+        for historial in self.historial:
+            if EstadoCurso.es_aprobado(historial.estado):
+                return historial.estado
+        
+        # Si no hay estados aprobados, retornar el más reciente
+        return self.historial[0].estado
 
     def esta_aprobado(self) -> bool:
         """Verifica si el curso está aprobado según el estado actual."""
         return EstadoCurso.es_aprobado(self.get_estado_actual())
 
     def get_anno_actual(self) -> Optional[int]:
-        """Obtiene el año del registro más reciente del historial."""
-        if self.historial:
-            return self.historial[0].anno
-        return None
+        """
+        Obtiene el año correspondiente al estado actual del curso.
+        
+        Si el curso está aprobado, retorna el año del registro aprobado.
+        Si no está aprobado, retorna el año del registro más reciente.
+        """
+        if not self.historial:
+            return None
+        
+        # Si está aprobado, buscar el año del registro aprobado
+        estado_actual = self.get_estado_actual()
+        if EstadoCurso.es_aprobado(estado_actual):
+            for historial in self.historial:
+                if historial.estado == estado_actual:
+                    return historial.anno
+        
+        # Si no está aprobado, retornar el año más reciente
+        return self.historial[0].anno
 
     def get_periodo_actual(self) -> Optional[int]:
-        """Obtiene el período del registro más reciente del historial."""
-        if self.historial:
-            return self.historial[0].periodo
-        return None
+        """
+        Obtiene el período correspondiente al estado actual del curso.
+        
+        Si el curso está aprobado, retorna el período del registro aprobado.
+        Si no está aprobado, retorna el período del registro más reciente.
+        """
+        if not self.historial:
+            return None
+        
+        # Si está aprobado, buscar el período del registro aprobado
+        estado_actual = self.get_estado_actual()
+        if EstadoCurso.es_aprobado(estado_actual):
+            for historial in self.historial:
+                if historial.estado == estado_actual:
+                    return historial.periodo
+        
+        # Si no está aprobado, retornar el período más reciente
+        return self.historial[0].periodo
 
     def __str__(self) -> str:
         """Representación en string del curso de carrera."""

@@ -306,7 +306,7 @@ class EquiparacionAnalyzer:
         approved_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
         pending_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
         no_equiv_fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
-        equiv_fill = PatternFill(start_color='D5E8D4', end_color='D5E8D4', fill_type='solid')
+        equiv_fill = PatternFill(start_color='CCE5FF', end_color='CCE5FF', fill_type='solid')  # Azul claro para cursos equiparados
         
         center_alignment = Alignment(horizontal='center', vertical='center')
         

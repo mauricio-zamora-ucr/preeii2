@@ -703,12 +703,25 @@ class ExcelWriter:
         for numero_semestre in sorted(expediente.semestres.keys()):
             semestre = expediente.semestres[numero_semestre]
             
-            cursos_aprobados = len([c for c in semestre.cursos if c.esta_aprobado()])
-            cursos_reprobados = len([c for c in semestre.cursos if any(h.estado == 'REPROBADO' for h in c.historial)])
-            cursos_matriculados = len([c for c in semestre.cursos if any(h.estado == 'MATRICULADO' for h in c.historial)])
-            cursos_pendientes = len([c for c in semestre.cursos if not c.esta_aprobado() and not any(h.estado == 'MATRICULADO' for h in c.historial)])
-            total_cursos = len(semestre.cursos)
+            # Contar según el estado ACTUAL de cada curso (no histórico)
+            cursos_aprobados = 0
+            cursos_reprobados = 0
+            cursos_matriculados = 0
+            cursos_pendientes = 0
             
+            for curso in semestre.cursos:
+                estado_actual = curso.get_estado_actual()
+                
+                if curso.esta_aprobado():  # Usa el método que ya considera la lógica correcta
+                    cursos_aprobados += 1
+                elif estado_actual == 'MATRICULADO':
+                    cursos_matriculados += 1
+                elif estado_actual == 'REPROBADO':
+                    cursos_reprobados += 1
+                else:
+                    cursos_pendientes += 1
+            
+            total_cursos = len(semestre.cursos)
             progreso = (cursos_aprobados / total_cursos * 100) if total_cursos > 0 else 0
             
             # Determinar estado del semestre
